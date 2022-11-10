@@ -1,13 +1,13 @@
 // a message bubble component that displays a message
 // and a timestamp
 
-export interface MessageDetails {
+export interface Message {
   text: string;
   timestamp: Date;
   user: string;
 }
 
-const Message = ({text, timestamp, user}: MessageDetails) => {
+const MessageBubble = ({text, timestamp, user}: Message) => {
   return (
     <div className={`rounded-lg bg-slate-500 text-white p-3 w-3/4
       ${user === "ai" ? "" : "ml-8"}`}>
@@ -20,4 +20,4 @@ const Message = ({text, timestamp, user}: MessageDetails) => {
   );
 };
 
-export default Message;
+export default MessageBubble;

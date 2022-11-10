@@ -1,21 +1,26 @@
 import type { NextPage } from "next";
 import { useState } from "react";
-import Message from "../components/message";
-import type {MessageDetails} from "../components/message";
+import MessageBubble from "../components/message";
+import type { Message } from "../components/message";
 
 const Home: NextPage = () => {
-  const [message, setMessage] = useState<string>("");
-  const [messages, setMessages] = useState<MessageDetails[]>([]);
+  // Initialize the state for current message text and the list of messages
+  const [messageText, setMessageText] = useState<string>("");
+  const [messages, setMessages] = useState<Message[]>([]);
 
+  /**
+   * Send a message to the chatbot
+   * @param text the text of the message
+   */
   const sendMessage = async (text: string) => {
-    // create new message and update state
-    const newMessage: MessageDetails = {
+    // Create a new message object
+    const newMessage: Message = {
       text: text,
       timestamp: new Date(),
       user: "John",
-    }
-    
-    // send message to API to get response
+    };
+
+    // Send the message to API to get a response
     const requestInit: RequestInit = {
       method: "POST",
       headers: HEADERS,
@@ -24,23 +29,25 @@ const Home: NextPage = () => {
     const response = await fetch(API_URL, requestInit);
     const json = await response.json();
     const emotion = json[0].generated_text;
-    console.log(emotion);
-    
-    const aiMessage: MessageDetails = {
+    const aiMessage: Message = {
       text: `Damn u sure are feeling ${emotion} imo`,
       timestamp: new Date(),
       user: "ai",
     }
 
+    // Update the message list state
     setMessages([...messages, newMessage, aiMessage]);
+    // Clear current message text
+    setMessageText("");
+  };
 
-    // clear message
-    setMessage("");
-  }
-
-  const API_URL = "https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-emotion";
+  const API_URL =
+    "https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-emotion";
   const HEADERS = new Headers();
-  HEADERS.append("Authorization", "Bearer " + process.env.NEXT_PUBLIC_HFACE_TOKEN);
+  HEADERS.append(
+    "Authorization",
+    "Bearer " + process.env.NEXT_PUBLIC_HFACE_TOKEN
+  );
 
   return (
     <div className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
@@ -60,27 +67,24 @@ const Home: NextPage = () => {
       <div id="chat-window">
         <div id="messages" className="m-4 w-80 space-y-2 overflow-y-scroll">
           {messages.map((message) => (
-            <Message
-              key={message.timestamp.getTime()}
-              {...message}
-            />
+            <MessageBubble key={message.timestamp.getTime()} {...message} />
           ))}
         </div>
 
         {/* text box for chat */}
-        <div className="flex flex-row space-x-4">
+        <div id="message-box" className="flex flex-row space-x-4">
           <input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
             className="border-10 input input-sm bg-gray-200"
             type="text"
             placeholder="Type a message..."
           />
           <button
             className="btn-sm btn bg-slate-500 text-white"
-            onClick={() => sendMessage(message)}
+            onClick={() => sendMessage(messageText)}
           >
-            Click me!
+            Send
           </button>
         </div>
       </div>
