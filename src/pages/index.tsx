@@ -27,6 +27,13 @@ const Home: NextPage = () => {
       body: JSON.stringify({ inputs: text }),
     };
     const response = await fetch(API_URL, requestInit);
+
+    if (!response.ok) {
+      // If the response is not ok, display an error message
+      console.error(await response.text());
+      return;
+    }
+
     const json = await response.json();
     const emotion = json[0].generated_text;
     const aiMessage: Message = {
