@@ -40,7 +40,7 @@ const Home: NextPage = () => {
       text: `Damn u sure are feeling ${emotion} imo`,
       timestamp: new Date(),
       user: "ai",
-    }
+    };
 
     // Update the message list state
     setMessages([...messages, newMessage, aiMessage]);
@@ -86,6 +86,11 @@ const Home: NextPage = () => {
             className="border-10 input input-sm bg-gray-200"
             type="text"
             placeholder="Type a message..."
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage(messageText);
+              }
+            }}
           />
           <button
             className="btn-sm btn bg-slate-500 text-white"
