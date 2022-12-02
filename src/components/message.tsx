@@ -1,19 +1,31 @@
 // a message bubble component that displays a message
 // and a timestamp
+import type { Message, User } from "@prisma/client";
+import Avatar from "./avatar";
 
-export interface Message {
-  text: string;
-  timestamp: Date;
-  user: string;
-}
-
-const MessageBubble = ({text, timestamp, user}: Message) => {
+const MessageBubble = ({
+  text,
+  user,
+  createdAt,
+  ai,
+}: Message & { user: User | null }) => {
   return (
-    <div className={`rounded-lg bg-slate-500 text-white p-3 w-3/4
-      ${user === "ai" ? "" : "ml-8"}`}>
-      <div className="flex flex-row w-full justify-between">
-        <p>{user}</p>
-        <p>{timestamp.toLocaleTimeString()}</p>
+    // align AI messages left
+    // TODO: align messages based on current user
+    <div
+      className={`w-3/4 rounded-lg bg-slate-500 p-3 text-white ${
+        ai ? "" : "ml-8"
+      }`}
+    >
+      <div className="flex w-full flex-row justify-between">
+        {/* profile picture */}
+        <p>
+          <Avatar user={user} />
+        </p>
+        {/* name */}
+        <p>{ai ? "AI" : user?.name}</p>
+        {/* timestamp */}
+        <p>{createdAt.toLocaleTimeString()}</p>
       </div>
       <p>{text}</p>
     </div>
