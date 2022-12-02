@@ -13,12 +13,17 @@ export const messagesRouter = router({
 
   create: publicProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
     // Create user message in DB
-    const newMsg = await ctx.prisma.message.create({
-      data: {
-        text: input,
-        userId: ctx.session?.user?.id,
-      },
-    });
+    try {
+      await ctx.prisma.message.create({
+        data: {
+          text: input,
+          userId: ctx.session?.user?.id,
+        },
+      });
+    } catch (e) {
+      console.error("Error creating user message", e);
+      return;
+    }
 
     // Send user message to API to get emotion response
     const requestInit: RequestInit = {
@@ -28,18 +33,23 @@ export const messagesRouter = router({
     };
     const response = await fetch(API_URL, requestInit);
     if (!response.ok) {
+      console.error("Error getting emotion response");
       console.error(await response.text());
-      return;
     }
 
     // Create AI message from JSON response
     const json = await response.json();
     const emotion = json[0].generated_text;
-    const newAiMsg = await ctx.prisma.message.create({
-      data: {
-        text: `Damn u sure are feeling ${emotion} imo`,
-        ai: true,
-      },
-    });
+    try {
+      await ctx.prisma.message.create({
+        data: {
+          text: `Damn u sure are feeling ${emotion} imo`,
+          ai: true,
+        },
+      });
+    } catch (e) {
+      console.error("Error creating AI message", e);
+      return;
+    }
   }),
 });
