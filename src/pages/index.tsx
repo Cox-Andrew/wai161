@@ -1,60 +1,29 @@
 import type { NextPage } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MessageBubble from "../components/message";
-import type { Message } from "../components/message";
+import { signIn, signOut, useSession } from "next-auth/react";
+import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
   // Initialize the state for current message text and the list of messages
   const [messageText, setMessageText] = useState<string>("");
-  const [messages, setMessages] = useState<Message[]>([]);
 
-  /**
-   * Send a message to the chatbot
-   * @param text the text of the message
-   */
-  const sendMessage = async (text: string) => {
-    // Create a new message object
-    const newMessage: Message = {
-      text: text,
-      timestamp: new Date(),
-      user: "John",
-    };
+  const messageData = trpc.message.getAll.useQuery();
+  const createMessage = trpc.message.create.useMutation();
 
-    // Send the message to API to get a response
-    const requestInit: RequestInit = {
-      method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify({ inputs: text }),
-    };
-    const response = await fetch(API_URL, requestInit);
 
-    if (!response.ok) {
-      // If the response is not ok, display an error message
-      console.error(await response.text());
-      return;
+  // Load discord session data
+  const {data: sessionData} = useSession();
+
+  useEffect(() => {
+    const chatRefresh = setInterval(() => {
+      messageData.refetch();
+    }, 1000);
+
+    return () => {
+      clearInterval(chatRefresh);
     }
-
-    const json = await response.json();
-    const emotion = json[0].generated_text;
-    const aiMessage: Message = {
-      text: `Damn u sure are feeling ${emotion} imo`,
-      timestamp: new Date(),
-      user: "ai",
-    };
-
-    // Update the message list state
-    setMessages([...messages, newMessage, aiMessage]);
-    // Clear current message text
-    setMessageText("");
-  };
-
-  const API_URL =
-    "https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-emotion";
-  const HEADERS = new Headers();
-  HEADERS.append(
-    "Authorization",
-    "Bearer " + process.env.NEXT_PUBLIC_HFACE_TOKEN
-  );
+  }, [messageData]);
 
   return (
     <div className="container mx-auto flex min-h-screen flex-col items-center justify-center p-4">
@@ -71,10 +40,18 @@ const Home: NextPage = () => {
         A Warwick AI course creating a web app
       </p>
 
+      
+      <button
+        className="mt-4 btn"
+        onClick= {() => (sessionData ? signOut() : signIn("discord"))}
+      >
+        {sessionData ? "Sign out of " + sessionData.user?.email : "Sign in with Discord"}
+      </button>
+
       <div id="chat-window">
         <div id="messages" className="m-4 w-80 space-y-2 overflow-y-scroll">
-          {messages.map((message) => (
-            <MessageBubble key={message.timestamp.getTime()} {...message} />
+          {messageData.data?.map((message) => (
+            <MessageBubble key={message.id} {...message} />
           ))}
         </div>
 
@@ -88,13 +65,13 @@ const Home: NextPage = () => {
             placeholder="Type a message..."
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                sendMessage(messageText);
+                createMessage.mutate(messageText);
               }
             }}
           />
           <button
             className="btn-sm btn bg-slate-500 text-white"
-            onClick={() => sendMessage(messageText)}
+            onClick={() => createMessage.mutate(messageText)}
           >
             Send
           </button>
