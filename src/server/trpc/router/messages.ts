@@ -8,7 +8,11 @@ HEADERS.append("Authorization", "Bearer " + process.env.HFACE_TOKEN);
 
 export const messagesRouter = router({
   getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.message.findMany();
+    return ctx.prisma.message.findMany({
+      include: {
+        user: true,
+      },
+    });
   }),
 
   create: publicProcedure.input(z.string()).mutation(async ({ ctx, input }) => {
