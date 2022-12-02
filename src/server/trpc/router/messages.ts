@@ -4,10 +4,7 @@ import { publicProcedure, router } from "../trpc";
 const API_URL =
   "https://api-inference.huggingface.co/models/mrm8488/t5-base-finetuned-emotion";
 const HEADERS = new Headers();
-HEADERS.append(
-  "Authorization",
-  "Bearer " + process.env.NEXT_PUBLIC_HFACE_TOKEN
-);
+HEADERS.append("Authorization", "Bearer " + process.env.HFACE_TOKEN);
 
 export const messagesRouter = router({
   getAll: publicProcedure.query(({ ctx }) => {
